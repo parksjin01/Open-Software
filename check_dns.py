@@ -1,8 +1,6 @@
 import urllib2
 import BeautifulSoup
 a=urllib2.urlopen('https://sitecheck.sucuri.net/results/'+raw_input())
-#a=urllib2.urlopen('https://quttera.com/sitescan/search.naver.com')
-#a=urllib2.urlopen('https://quttera.com/detailed_report/search.naver.com')
 html=BeautifulSoup.BeautifulSoup(a)
 result=html.findAll('table', attrs={'class':'table scan-findings'})
 result=result[0].findAll('td')
