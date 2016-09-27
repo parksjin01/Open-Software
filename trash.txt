@@ -1,0 +1,98 @@
+###[ Ethernet ]###
+  dst       = d8:b1:90:ed:90:40
+  src       = 34:36:3b:d3:76:72
+  type      = 0x800
+###[ IP ]###
+     version   = 4L
+     ihl       = 5L
+     tos       = 0x0
+     len       = 80
+     id        = 1
+     flags     =
+     frag      = 0L
+     ttl       = 64
+     proto     = icmp
+     chksum    = 0xee8f
+     src       = 192.168.5.99
+     dst       = 192.168.5.105
+     \options   \
+###[ ICMP ]###
+        type      = redirect
+        code      = host-redirect
+        chksum    = 0x9839
+        gw        = 192.168.5.254
+###[ IP in ICMP ]###
+           version   = 4L
+           ihl       = 5L
+           tos       = 0x0
+           len       = 52
+           id        = 22207
+           flags     =
+           frag      = 0L
+           ttl       = 56
+           proto     = tcp
+           chksum    = 0xc84a
+           src       = 216.58.197.110
+           dst       = 192.168.5.105
+           \options   \
+###[ TCP in ICMP ]###
+              sport     = https
+              dport     = apc_2160
+              seq       = 1035773775
+              ack       = 3139077678
+              dataofs   = 8L
+              reserved  = 0L
+              flags     = A
+              window    = 344
+              chksum    = 0x6199
+              urgptr    = 0
+              options   = [('NOP', None), ('NOP', None), ('SAck', (3139077677, 3139077678))]
+###[ Ethernet ]###
+  dst       = d8:b1:90:ed:90:40
+  src       = 34:36:3b:d3:76:72
+  type      = 0x800
+###[ IP ]###
+     version   = 4
+     ihl       = None
+     tos       = 0x0
+     len       = None
+     id        = 1
+     flags     =
+     frag      = 0
+     ttl       = 64
+     proto     = icmp
+     chksum    = None
+     src       = 192.168.5.99
+     dst       = 192.168.5.105
+     \options   \
+###[ ICMP ]###
+        type      = redirect
+        code      = host-redirect
+        chksum    = None
+        gw        = 192.168.5.254
+###[ IP ]###
+           version   = 4L
+           ihl       = 5L
+           tos       = 0x0
+           len       = 52
+           id        = 22207
+           flags     =
+           frag      = 0L
+           ttl       = 56
+           proto     = tcp
+           chksum    = 0xc84a
+           src       = 216.58.197.110
+           dst       = 192.168.5.105
+           \options   \
+###[ TCP ]###
+              sport     = https
+              dport     = apc_2160
+              seq       = 1035773775
+              ack       = 3139077678
+              dataofs   = 8L
+              reserved  = 0L
+              flags     = A
+              window    = 344
+              chksum    = None
+              urgptr    = 0
+              options   = [('NOP', None), ('NOP', None), ('SAck', (3139077677, 3139077678))]

