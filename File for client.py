@@ -1,6 +1,14 @@
 import socket
 
+def select_victim():
+    router_ip=raw_input('Input router IP')
+    return router_ip
+
 sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect(('192.168.0.122', 9876))
+router_addr=select_victim()
+sock.connect(('192.9.13.229', 9876))
+sock.sendall(router_addr)
 while True:
-    print sock.recv(1024)
+    a=sock.recv(20)
+    if a:
+        print a

